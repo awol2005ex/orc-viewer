@@ -1,4 +1,5 @@
 use arrow::array::{downcast_array, make_array, Array, AsArray, StringArray};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use orc_rust::ArrowReaderBuilder;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Debug, fs::File, sync::Arc};
@@ -14,129 +15,233 @@ pub struct ReadOrcResult {
     pub code: i64,
     pub message: String,
 }
+pub fn i64_to_timestamp_format(timestamp: i64) -> String {
+    if timestamp > 0 {
+        let naive = DateTime::from_timestamp(timestamp, 0);
+        let datetime: DateTime<Utc> =
+            DateTime::from_naive_utc_and_offset(naive.unwrap_or_default().naive_utc(), Utc);
+        datetime.to_rfc3339()
+    } else {
+        "".to_owned()
+    }
+}
 
-pub fn get_column_value( column :&Arc<dyn Array>, rowindex: usize) -> String {
+pub fn i64_to_nanosecond_format(timestamp: i64) -> String {
+    if timestamp > 0 {
+        let naive = DateTime::from_timestamp(timestamp / 1000000000, 0);
+        let datetime: DateTime<Utc> =
+            DateTime::from_naive_utc_and_offset(naive.unwrap_or_default().naive_utc(), Utc);
+        datetime.to_rfc3339()
+    } else {
+        "".to_owned()
+    }
+}
+pub fn get_column_value(column: &Arc<dyn Array>, rowindex: usize) -> String {
     match column.data_type() {
         arrow::datatypes::DataType::Utf8 => {
-           return  downcast_array::<StringArray>(column.as_ref()).value(rowindex).to_string();
-            
+            return downcast_array::<StringArray>(column.as_ref())
+                .value(rowindex)
+                .to_string();
         }
         arrow::datatypes::DataType::Null => {
-            return  "NULL".to_owned();
-        },
+            return "NULL".to_owned();
+        }
         arrow::datatypes::DataType::Boolean => {
-            return  downcast_array::<arrow::array::BooleanArray>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::BooleanArray>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::Int8 => {
-            return  downcast_array::<arrow::array::Int8Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::Int8Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::Int16 => {
-            return  downcast_array::<arrow::array::Int16Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::Int16Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::Int32 => {
-            return  downcast_array::<arrow::array::Int32Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::Int32Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::Int64 => {
-            return  downcast_array::<arrow::array::Int64Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::Int64Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::UInt8 => {
-            return  downcast_array::<arrow::array::UInt8Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::UInt8Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::UInt16 => {
-            return  downcast_array::<arrow::array::UInt16Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::UInt16Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::UInt32 => {
-            return  downcast_array::<arrow::array::UInt32Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::UInt32Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::UInt64 => {
-            return  downcast_array::<arrow::array::UInt64Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::UInt64Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::Float16 => {
-            return  downcast_array::<arrow::array::Float16Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::Float16Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::Float32 => {
-            return  downcast_array::<arrow::array::Float32Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::Float32Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::Float64 => {
-            return  downcast_array::<arrow::array::Float64Array>(column.as_ref()).value(rowindex).to_string();
-        },
-        arrow::datatypes::DataType::Timestamp(time_unit, arc) => {
-            return  downcast_array::<arrow::array::TimestampNanosecondArray>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::Float64Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
+        arrow::datatypes::DataType::Timestamp(_time_unit, _arc) => {
+            return i64_to_nanosecond_format(
+                downcast_array::<arrow::array::TimestampNanosecondArray>(column.as_ref())
+                    .value(rowindex),
+            );
+        }
         arrow::datatypes::DataType::Date32 => {
-            return  downcast_array::<arrow::array::Date32Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return i64_to_timestamp_format(
+                downcast_array::<arrow::array::Date32Array>(column.as_ref())
+                    .value(rowindex)
+                    .into(),
+            );
+        }
         arrow::datatypes::DataType::Date64 => {
-            return  downcast_array::<arrow::array::Date64Array>(column.as_ref()).value(rowindex).to_string();
-        },
-        arrow::datatypes::DataType::Time32(time_unit) => {
-            return  downcast_array::<arrow::array::Time32SecondArray>(column.as_ref()).value(rowindex).to_string();
-        },
-        arrow::datatypes::DataType::Time64(time_unit) => {
-            return  downcast_array::<arrow::array::Time64NanosecondArray>(column.as_ref()).value(rowindex).to_string();
-        },
-        arrow::datatypes::DataType::Duration(time_unit) => {
-            return  downcast_array::<arrow::array::DurationNanosecondArray>(column.as_ref()).value(rowindex).to_string();
-        },
-        arrow::datatypes::DataType::Interval(interval_unit) => {
-            return  downcast_array::<arrow::array::IntervalDayTimeArray>(column.as_ref()).value(rowindex).milliseconds.to_string();
-        },
+            return i64_to_timestamp_format(
+                downcast_array::<arrow::array::Date64Array>(column.as_ref()).value(rowindex),
+            );
+        }
+        arrow::datatypes::DataType::Time32(_time_unit) => {
+            return downcast_array::<arrow::array::Time32SecondArray>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
+        arrow::datatypes::DataType::Time64(_time_unit) => {
+            return downcast_array::<arrow::array::Time64NanosecondArray>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
+        arrow::datatypes::DataType::Duration(_time_unit) => {
+            return downcast_array::<arrow::array::DurationNanosecondArray>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
+        arrow::datatypes::DataType::Interval(_interval_unit) => {
+            return downcast_array::<arrow::array::IntervalDayTimeArray>(column.as_ref())
+                .value(rowindex)
+                .milliseconds
+                .to_string();
+        }
         arrow::datatypes::DataType::Binary => {
-            return  String::from_utf8_lossy(&downcast_array::<arrow::array::BinaryArray>(column.as_ref()).value(rowindex)).to_string();
-        },
+            return String::from_utf8_lossy(
+                &downcast_array::<arrow::array::BinaryArray>(column.as_ref()).value(rowindex),
+            )
+            .to_string();
+        }
         arrow::datatypes::DataType::FixedSizeBinary(_) => {
-            return  String::from_utf8_lossy(&downcast_array::<arrow::array::FixedSizeBinaryArray>(column.as_ref()).value(rowindex)).to_string();
-        },
+            return String::from_utf8_lossy(
+                &downcast_array::<arrow::array::FixedSizeBinaryArray>(column.as_ref())
+                    .value(rowindex),
+            )
+            .to_string();
+        }
         arrow::datatypes::DataType::LargeBinary => {
-            return  String::from_utf8_lossy(&downcast_array::<arrow::array::LargeBinaryArray>(column.as_ref()).value(rowindex)).to_string();
-        },
+            return String::from_utf8_lossy(
+                &downcast_array::<arrow::array::LargeBinaryArray>(column.as_ref()).value(rowindex),
+            )
+            .to_string();
+        }
         arrow::datatypes::DataType::BinaryView => {
-            return  String::from_utf8_lossy(&downcast_array::<arrow::array::BinaryArray>(column.as_ref()).value(rowindex)).to_string();
-        },
+            return String::from_utf8_lossy(
+                &downcast_array::<arrow::array::BinaryArray>(column.as_ref()).value(rowindex),
+            )
+            .to_string();
+        }
         arrow::datatypes::DataType::LargeUtf8 => {
-            return  downcast_array::<arrow::array::LargeStringArray>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::LargeStringArray>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::Utf8View => {
-            return  downcast_array::<arrow::array::StringArray>(column.as_ref()).value(rowindex).to_string();
-        },
-        arrow::datatypes::DataType::List(arc) => {
-            return  format!("{:?}",downcast_array::<arrow::array::ListArray>(column.as_ref()).value(rowindex));
-        },
-        arrow::datatypes::DataType::ListView(arc) => {
-            return  format!("{:?}",downcast_array::<arrow::array::ListArray>(column.as_ref()).value(rowindex));
-        },
-        arrow::datatypes::DataType::FixedSizeList(arc, _) => {
-            return  format!("{:?}",downcast_array::<arrow::array::FixedSizeListArray>(column.as_ref()).value(rowindex));
-        },
-        arrow::datatypes::DataType::LargeList(arc) => {
-            return  format!("{:?}",downcast_array::<arrow::array::LargeListArray>(column.as_ref()).value(rowindex));
-        },
-        arrow::datatypes::DataType::LargeListView(arc) => {
-            return  format!("{:?}",downcast_array::<arrow::array::LargeListArray>(column.as_ref()).value(rowindex));
-        },
-        arrow::datatypes::DataType::Struct(fields) => {
-            return  "NULL".to_owned();
-        },
-        arrow::datatypes::DataType::Union(union_fields, union_mode) => {
-            return  format!("{:?}",downcast_array::<arrow::array::UnionArray>(column.as_ref()).value(rowindex));
-        },
-        arrow::datatypes::DataType::Dictionary(data_type, data_type1) => {
-            return  "NULL".to_owned();
-        },
+            return downcast_array::<arrow::array::StringArray>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
+        arrow::datatypes::DataType::List(_arc) => {
+            return format!(
+                "{:?}",
+                downcast_array::<arrow::array::ListArray>(column.as_ref()).value(rowindex)
+            );
+        }
+        arrow::datatypes::DataType::ListView(_arc) => {
+            return format!(
+                "{:?}",
+                downcast_array::<arrow::array::ListArray>(column.as_ref()).value(rowindex)
+            );
+        }
+        arrow::datatypes::DataType::FixedSizeList(_arc, _) => {
+            return format!(
+                "{:?}",
+                downcast_array::<arrow::array::FixedSizeListArray>(column.as_ref()).value(rowindex)
+            );
+        }
+        arrow::datatypes::DataType::LargeList(_arc) => {
+            return format!(
+                "{:?}",
+                downcast_array::<arrow::array::LargeListArray>(column.as_ref()).value(rowindex)
+            );
+        }
+        arrow::datatypes::DataType::LargeListView(_arc) => {
+            return format!(
+                "{:?}",
+                downcast_array::<arrow::array::LargeListArray>(column.as_ref()).value(rowindex)
+            );
+        }
+        arrow::datatypes::DataType::Struct(_fields) => {
+            return "NULL".to_owned();
+        }
+        arrow::datatypes::DataType::Union(_union_fields, _union_mode) => {
+            return format!(
+                "{:?}",
+                downcast_array::<arrow::array::UnionArray>(column.as_ref()).value(rowindex)
+            );
+        }
+        arrow::datatypes::DataType::Dictionary(_data_type, _data_type1) => {
+            return "NULL".to_owned();
+        }
         arrow::datatypes::DataType::Decimal128(_, _) => {
-            return  downcast_array::<arrow::array::Decimal128Array>(column.as_ref()).value(rowindex).to_string();
-        },
+            return downcast_array::<arrow::array::Decimal128Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
         arrow::datatypes::DataType::Decimal256(_, _) => {
-            return  downcast_array::<arrow::array::Decimal256Array>(column.as_ref()).value(rowindex).to_string();
-        },
-        arrow::datatypes::DataType::Map(arc, _) => {
-            return  format!("{:?}",downcast_array::<arrow::array::MapArray>(column.as_ref()).value(rowindex));
-        },
-        arrow::datatypes::DataType::RunEndEncoded(arc, arc1) => {
-            return  "NULL".to_owned();
-        },
+            return downcast_array::<arrow::array::Decimal256Array>(column.as_ref())
+                .value(rowindex)
+                .to_string();
+        }
+        arrow::datatypes::DataType::Map(_arc, _) => {
+            return format!(
+                "{:?}",
+                downcast_array::<arrow::array::MapArray>(column.as_ref()).value(rowindex)
+            );
+        }
+        arrow::datatypes::DataType::RunEndEncoded(_arc, _arc1) => {
+            return "NULL".to_owned();
+        }
     }
-    return "NULL".to_owned();
 }
 
 #[tauri::command]
