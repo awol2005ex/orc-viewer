@@ -20,6 +20,20 @@ async function read_orc_file(filename:string) {
   total.value = result.total;
 }
 
+async function read_orc_file_by_page(filename:string,page_size :number, page_number: number) {
+  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+  const  result :any =await invoke("read_orc_file_by_page", { fileName: filename,pageSize:page_size, pageNumber:page_number});
+  console.log(result);
+
+
+  columns.value = result.columns;
+  data.value = result.rows;
+
+  orc_struct.value= JSON.stringify(result.columns);
+
+  total.value = result.total;
+}
+
 const data = ref([]);
 
 const openFile = async () => {
@@ -33,7 +47,7 @@ const openFile = async () => {
   })
   if (selected) {
     orcFileForm.inputFiles = selected;
-    await read_orc_file(orcFileForm.inputFiles)
+    await read_orc_file_by_page(orcFileForm.inputFiles,pageSize.value,currentPage.value)
   }
 }
 
@@ -54,8 +68,10 @@ const openStruct = async () => {
 const pageSize = ref(10);
 const total = ref(0);
 const currentPage = ref(1);
-const handleCurrentChange = (val: number) => {
+const handleCurrentChange =async (val: number) => {
   currentPage.value=val
+
+  await read_orc_file_by_page(orcFileForm.inputFiles,pageSize.value,currentPage.value)
 }
 </script>
 
@@ -74,7 +90,12 @@ const handleCurrentChange = (val: number) => {
 
   <br />
   <el-table :data="data" min-height="240" border fit>
-    <el-table-column label="__rowindex" width="150px" type="index" />
+    <el-table-column label="__rowindex" width="150px"  >
+      
+      <template #default="scope">
+        {{ scope.$index + 1 + pageSize * (currentPage - 1)}}
+      </template>
+    </el-table-column>
     <el-table-column v-for="column in columns" :key="column.name" :prop="column.name" :label="column.name" min-width="100px">
       <template #header>
        <span :title="column.data_type"> {{ column.name }}</span>
