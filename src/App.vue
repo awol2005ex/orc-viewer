@@ -5,7 +5,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 
 const orcFileForm = reactive({ inputFiles: "" });
 
-
+/*
 async function read_orc_file(filename:string) {
   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
   const  result :any =await invoke("read_orc_file", { filename: filename});
@@ -18,7 +18,7 @@ async function read_orc_file(filename:string) {
   orc_struct.value= JSON.stringify(result.columns);
 
   total.value = result.total;
-}
+}*/
 
 async function read_orc_file_by_page(filename:string,page_size :number, page_number: number) {
   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
