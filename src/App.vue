@@ -73,6 +73,10 @@ const handleCurrentChange =async (val: number) => {
 
   await read_orc_file_by_page(orcFileForm.inputFiles,pageSize.value,currentPage.value)
 }
+const handleSizeChange = async (val: number) => {
+  pageSize.value=val
+  await read_orc_file_by_page(orcFileForm.inputFiles,pageSize.value,currentPage.value)
+}
 </script>
 
 <template>
@@ -109,6 +113,10 @@ const handleCurrentChange =async (val: number) => {
   :current-page="currentPage"
   :page-size="pageSize"
   :total="total"
+  :page-sizes="[10,100, 200, 300, 400]"
+  layout="prev, pager, next, sizes, jumper,total"
+  @size-change="handleSizeChange"
+  :size="pageSize"
 ></el-pagination>
   <el-drawer
     v-model="strunctdrawer"
