@@ -14,6 +14,7 @@ pub struct ReadOrcResult {
     pub rows: Vec<HashMap<String, String>>,
     pub code: i64,
     pub message: String,
+    pub total: i64,
 }
 pub fn i64_to_timestamp_format(timestamp: i64) -> String {
     if timestamp > 0 {
@@ -257,6 +258,7 @@ pub fn read_orc_file(filename: &str) -> ReadOrcResult {
 
                 let mut result_data: Vec<HashMap<String, String>> = vec![];
 
+                let mut total=0 ;
                 match reader.collect::<Result<Vec<_>, _>>() {
                     Ok(batchs) => {
                         for batch in batchs {
@@ -289,14 +291,16 @@ pub fn read_orc_file(filename: &str) -> ReadOrcResult {
                                     }
                                 }
                             }
-
+                            
                             result_data.append(&mut batch_result_data);
+                            total=total+batch_size;
                         }
                         return ReadOrcResult {
                             code: 0,
                             message: "".to_owned(),
                             columns: result_columns,
                             rows: result_data,
+                            total: total as i64,
                         };
                     }
                     Err(e) => {
@@ -305,6 +309,7 @@ pub fn read_orc_file(filename: &str) -> ReadOrcResult {
                             message: e.to_string(),
                             columns: vec![],
                             rows: vec![],
+                            total: 0
                         }
                     }
                 }
@@ -315,6 +320,7 @@ pub fn read_orc_file(filename: &str) -> ReadOrcResult {
                     message: e.to_string(),
                     columns: vec![],
                     rows: vec![],
+                    total: 0
                 }
             }
         },
@@ -324,6 +330,7 @@ pub fn read_orc_file(filename: &str) -> ReadOrcResult {
                 message: e.to_string(),
                 columns: vec![],
                 rows: vec![],
+                total: 0
             }
         }
     }
@@ -333,5 +340,6 @@ pub fn read_orc_file(filename: &str) -> ReadOrcResult {
         message: "success".to_string(),
         columns: vec![],
         rows: vec![],
+        total: 0
     }
 }

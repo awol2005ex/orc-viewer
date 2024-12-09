@@ -16,6 +16,8 @@ async function read_orc_file(filename:string) {
   data.value = result.rows;
 
   orc_struct.value= JSON.stringify(result.columns);
+
+  total.value = result.total;
 }
 
 const data = ref([]);
@@ -49,6 +51,12 @@ const openStruct = async () => {
   strunctdrawer.value =  !strunctdrawer.value;
 }
 
+const pageSize = ref(10);
+const total = ref(0);
+const currentPage = ref(1);
+const handleCurrentChange = (val: number) => {
+  currentPage.value=val
+}
 </script>
 
 <template>
@@ -72,8 +80,15 @@ const openStruct = async () => {
        <span :title="column.data_type"> {{ column.name }}</span>
       </template>
     </el-table-column>
-  </el-table>
 
+   
+  </el-table>
+  <el-pagination
+  @current-change="handleCurrentChange"
+  :current-page="currentPage"
+  :page-size="pageSize"
+  :total="total"
+></el-pagination>
   <el-drawer
     v-model="strunctdrawer"
     title="Struct"
