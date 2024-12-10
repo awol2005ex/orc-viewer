@@ -363,9 +363,10 @@ pub fn read_orc_file_by_page(
                 let mut result_data: Vec<HashMap<String, String>> = vec![];
 
                 
-                let mut it=reader.skip((page_number-1)*page_size);
-                if let Some(Ok(batch)) = it.next().take() {
+                let mut it=reader.skip(page_number-1);
+                match it.next().take() {
                     
+                    Some(Ok(batch)) => {
                         println!("Read batch with {} rows",batch.num_rows());
 
                         if result_columns.is_empty() {
@@ -399,7 +400,18 @@ pub fn read_orc_file_by_page(
                         }
                         result_data.append(&mut batch_result_data);
                     
+                    },
+                    Some(Err(e)) => {
                         
+                        return ReadOrcResult {
+                            code: 1,
+                            message: e.to_string(),
+                            columns: vec![],
+                            rows: vec![],
+                            total: 0,
+                        }
+                    },
+                    None =>{}
                     
                 }
                 return ReadOrcResult {

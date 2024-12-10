@@ -31,7 +31,7 @@ async function read_orc_file_by_page(filename:string,page_size :number, page_num
 
   orc_struct.value= JSON.stringify(result.columns);
 
-  total.value = result.total;
+  total.value = parseInt(result.total);
 }
 
 const data = ref([]);
@@ -116,7 +116,6 @@ const handleSizeChange = async (val: number) => {
   :page-sizes="[10,100, 200, 300, 400]"
   layout="prev, pager, next, sizes, jumper,total"
   @size-change="handleSizeChange"
-  :size="pageSize"
 ></el-pagination>
   <el-drawer
     v-model="strunctdrawer"
