@@ -1,8 +1,8 @@
-use arrow::array::{downcast_array, make_array, Array, AsArray, StringArray};
-use chrono::{DateTime, NaiveDateTime, Utc};
+use arrow::array::{downcast_array, Array, StringArray};
+use chrono::{DateTime, Utc};
 use orc_rust::ArrowReaderBuilder;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fmt::Debug, fs::File, ops::Range, sync::Arc};
+use std::{collections::HashMap, fs::File, sync::Arc};
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ReadOrcResultColumn {
     pub name: String,
@@ -212,7 +212,10 @@ pub fn get_column_value(column: &Arc<dyn Array>, rowindex: usize) -> String {
             );
         }
         arrow::datatypes::DataType::Struct(_fields) => {
-            return "NULL".to_owned();
+            return format!(
+                "{:?}",
+                downcast_array::<arrow::array::StructArray>(column.as_ref()).slice(rowindex, 1)
+            );
         }
         arrow::datatypes::DataType::Union(_union_fields, _union_mode) => {
             return format!(
