@@ -1,8 +1,11 @@
-use arrow::array::{downcast_array, Array, StringArray};
+use arrow::{
+    array::{downcast_array, Array, StringArray},
+    datatypes::*,
+};
 use chrono::{DateTime, Utc};
 use orc_rust::ArrowReaderBuilder;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs::File, sync::Arc};
+use std::{any::Any, collections::HashMap, fs::File, sync::Arc};
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ReadOrcResultColumn {
     pub name: String,
@@ -223,7 +226,64 @@ pub fn get_column_value(column: &Arc<dyn Array>, rowindex: usize) -> String {
                 downcast_array::<arrow::array::UnionArray>(column.as_ref()).value(rowindex)
             );
         }
-        arrow::datatypes::DataType::Dictionary(_data_type, _data_type1) => {
+        arrow::datatypes::DataType::Dictionary(data_type, _) => {
+            if data_type.equals_datatype(&arrow::datatypes::DataType::Int8) {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::DictionaryArray<Int8Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+            if data_type.equals_datatype(&arrow::datatypes::DataType::Int16) {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::DictionaryArray<Int16Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+            if data_type.equals_datatype(&arrow::datatypes::DataType::Int32) {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::DictionaryArray<Int32Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+            if data_type.equals_datatype(&arrow::datatypes::DataType::Int64) {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::DictionaryArray<Int64Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+            if data_type.equals_datatype(&arrow::datatypes::DataType::UInt8) {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::DictionaryArray<UInt8Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+            if data_type.equals_datatype(&arrow::datatypes::DataType::UInt16) {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::DictionaryArray<UInt16Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+            if data_type.equals_datatype(&arrow::datatypes::DataType::UInt32) {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::DictionaryArray<UInt32Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+            if data_type.equals_datatype(&arrow::datatypes::DataType::UInt64) {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::DictionaryArray<UInt64Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+
             return "NULL".to_owned();
         }
         arrow::datatypes::DataType::Decimal128(_, _) => {
@@ -242,7 +302,38 @@ pub fn get_column_value(column: &Arc<dyn Array>, rowindex: usize) -> String {
                 downcast_array::<arrow::array::MapArray>(column.as_ref()).value(rowindex)
             );
         }
-        arrow::datatypes::DataType::RunEndEncoded(_arc, _arc1) => {
+        arrow::datatypes::DataType::RunEndEncoded(arc, _arc1) => {
+            if arc
+                .data_type()
+                .equals_datatype(&arrow::datatypes::DataType::Int16)
+            {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::RunArray<Int16Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+            if arc
+                .data_type()
+                .equals_datatype(&arrow::datatypes::DataType::Int32)
+            {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::RunArray<Int32Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+            if arc
+                .data_type()
+                .equals_datatype(&arrow::datatypes::DataType::Int64)
+            {
+                return format!(
+                    "{:?}",
+                    downcast_array::<arrow::array::RunArray<Int64Type>>(column.as_ref())
+                        .slice(rowindex, 1)
+                );
+            }
+
             return "NULL".to_owned();
         }
     }
@@ -337,23 +428,18 @@ pub fn read_orc_file(filename: &str) -> ReadOrcResult {
             }
         }
     }
-
-    ReadOrcResult {
-        code: 0,
-        message: "success".to_string(),
-        columns: vec![],
-        rows: vec![],
-        total: 0,
-    }
 }
 
 #[tauri::command]
 pub fn read_orc_file_by_page(
     file_name: &str,
     page_size: usize,
-    page_number: usize
+    page_number: usize,
 ) -> ReadOrcResult {
-    println!("Reading file: {} ,page_size: {}, page_number: {}", &file_name, &page_size, &page_number);
+    println!(
+        "Reading file: {} ,page_size: {}, page_number: {}",
+        &file_name, &page_size, &page_number
+    );
 
     match File::open(file_name) {
         Ok(f) => match ArrowReaderBuilder::try_new(f) {
@@ -365,12 +451,10 @@ pub fn read_orc_file_by_page(
                 let total = reader.total_row_count();
                 let mut result_data: Vec<HashMap<String, String>> = vec![];
 
-                
-                let mut it=reader.skip(page_number-1);
+                let mut it = reader.skip(page_number - 1);
                 match it.next().take() {
-                    
                     Some(Ok(batch)) => {
-                        println!("Read batch with {} rows",batch.num_rows());
+                        println!("Read batch with {} rows", batch.num_rows());
 
                         if result_columns.is_empty() {
                             for field in batch.schema().fields() {
@@ -402,10 +486,8 @@ pub fn read_orc_file_by_page(
                             }
                         }
                         result_data.append(&mut batch_result_data);
-                    
-                    },
+                    }
                     Some(Err(e)) => {
-                        
                         return ReadOrcResult {
                             code: 1,
                             message: e.to_string(),
@@ -413,9 +495,8 @@ pub fn read_orc_file_by_page(
                             rows: vec![],
                             total: 0,
                         }
-                    },
-                    None =>{}
-                    
+                    }
+                    None => {}
                 }
                 return ReadOrcResult {
                     code: 0,
