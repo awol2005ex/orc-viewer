@@ -5,7 +5,7 @@ use arrow::{
 use chrono::{DateTime, Utc};
 use orc_rust::ArrowReaderBuilder;
 use serde::{Deserialize, Serialize};
-use std::{any::Any, collections::HashMap, fs::File, sync::Arc};
+use std::{collections::HashMap, fs::File, sync::Arc};
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ReadOrcResultColumn {
     pub name: String,
@@ -527,11 +527,4 @@ pub fn read_orc_file_by_page(
         }
     }
 
-    ReadOrcResult {
-        code: 0,
-        message: "success".to_string(),
-        columns: vec![],
-        rows: vec![],
-        total: 0,
-    }
 }
