@@ -1,12 +1,8 @@
-use arrow::{
-    array::{downcast_array, Array, StringArray},
-    datatypes::*,
-    util::display::{ArrayFormatter, FormatOptions},
-};
-use chrono::{DateTime, Utc};
+use std::collections::HashMap;
+use std::fs::File;
+use arrow::util::display::{ArrayFormatter, FormatOptions};
 use orc_rust::ArrowReaderBuilder;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs::File, sync::Arc};
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ReadOrcResultColumn {
     pub name: String,
@@ -43,7 +39,7 @@ pub fn read_orc_file(filename: &str) -> ReadOrcResult {
                             if result_columns.is_empty() {
                                 for field in batch.schema().fields() {
                                     result_columns.push(ReadOrcResultColumn {
-                                        name: field.name().to_uppercase(),
+                                        name: field.name().to_owned(),
                                         data_type: field.data_type().to_string(),
                                     });
                                 }
@@ -164,7 +160,6 @@ pub fn read_orc_file_by_page(
                             if formatter_result.is_ok() {
                                 let formatter = formatter_result.unwrap();
                                 for rowindex in 0..batch_size {
-                                    
                                     let value = formatter.value(rowindex);
                                     if rowindex >= batch_result_data.len() {
                                         let mut row = HashMap::new();
