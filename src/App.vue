@@ -105,6 +105,7 @@ const exportCsv = async () => {
         extensions: ["csv"],
       },
     ],
+    defaultPath: orcFileForm.inputFiles.replace("\\","/").split("/").pop()+".csv",
   });
   if (selected) {
     const loadingInstance1 = ElLoading.service({ fullscreen: true });
