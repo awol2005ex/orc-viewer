@@ -15,7 +15,7 @@ pub fn export_orc_file_csv(orc_filename: &str, target_csv_file_path: &str) -> Re
     
         if let Some( Ok( batch)) =orc_reader.next(){
             let csv_file = File::create(target_csv_file_path).map_err(|e| format!("Failed to create file: {}", e))?;
-            let mut writer = csv::Writer::new(csv_file);
+            let mut writer = csv::WriterBuilder::new().with_delimiter(b',').with_show_nested(true).build(csv_file);
             
             let _ = writer.write(&batch).map_err(|e| format!("Failed to write file: {}", e))?;
         } else {

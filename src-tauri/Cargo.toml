@@ -22,8 +22,8 @@ tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-orc-rust = "0.5.0"
-arrow = "53.3.0"
+orc-rust = {git = "https://github.com/awol2005ex/orc-rust.git", branch = "awol2005ex-br-csv-show-nested-struct-type-2025-01-07"}
+arrow = { git = "https://github.com/awol2005ex/arrow-rs.git",package="arrow", branch = "awol2005ex-br-csv-show-nested-struct-type-2025-01-07", features = ["prettyprint", "chrono-tz", "struct_display_json"] }
 chrono ="0.4"
 tauri-plugin-dialog = "2"
 
