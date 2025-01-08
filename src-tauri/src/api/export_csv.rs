@@ -47,9 +47,9 @@ pub fn export_orc_file_csv(orc_filename: &str, target_csv_file_path: &str) -> Re
                             let s = object.get(c).unwrap_or(&serde_json::Value::Null);
                             let mut ss = "".to_owned();
                             if s.is_string() {
-                                ss = s.as_str().unwrap_or_default().to_owned();
+                                ss = s.as_str().unwrap_or_default().to_owned().replace("\"","\"\"");
                             } else {
-                                ss = s.to_string();
+                                ss = s.to_string().replace("\"","\"\"");
                             }
                             if ss.contains(",") {
                                 format!("\"{}\"", &ss)
