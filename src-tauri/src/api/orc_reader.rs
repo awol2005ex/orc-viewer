@@ -162,7 +162,11 @@ pub fn read_orc_file_by_page(
                             let mut row = HashMap::new();
                             if let Some(object) = item.as_object() {
                                 object.iter().for_each(|(k, v)| {
-                                    row.insert(k.to_string(), v.to_string());
+                                    if v.is_string() {
+                                        row.insert(k.to_string(), v.as_str().unwrap_or_default().to_string());
+                                    } else {
+                                        row.insert(k.to_string(), v.to_string());
+                                    }
                                 });
                             }
                             batch_result_data.push(row);
