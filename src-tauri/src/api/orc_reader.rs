@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use std::fs::File;
 use arrow::util::display::{ArrayFormatter, FormatOptions};
 use orc_rust::ArrowReaderBuilder;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs::File;
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct ReadOrcResultColumn {
     pub name: String,
@@ -136,8 +136,6 @@ pub fn read_orc_file_by_page(
                 let total = reader.total_row_count();
                 let mut result_data: Vec<HashMap<String, String>> = vec![];
 
-                let options = FormatOptions::default().with_display_error(true);
-
                 let mut it = reader.skip(page_number - 1);
                 match it.next().take() {
                     Some(Ok(batch)) => {
@@ -146,37 +144,30 @@ pub fn read_orc_file_by_page(
                         if result_columns.is_empty() {
                             for field in batch.schema().fields() {
                                 result_columns.push(ReadOrcResultColumn {
-                                    name: field.name().to_uppercase(),
+                                    name: field.name().to_owned(),
                                     data_type: field.data_type().to_string(),
                                 });
                             }
                         }
-
                         let mut batch_result_data: Vec<HashMap<String, String>> = vec![];
-                        let batch_size = batch.num_rows();
-                        for (columnindex, column) in batch.columns().into_iter().enumerate() {
-                            let formatter_result =
-                                ArrayFormatter::try_new(column.as_ref(), &options);
-                            if formatter_result.is_ok() {
-                                let formatter = formatter_result.unwrap();
-                                for rowindex in 0..batch_size {
-                                    let value = formatter.value(rowindex);
-                                    if rowindex >= batch_result_data.len() {
-                                        let mut row = HashMap::new();
-                                        row.insert(
-                                            result_columns[columnindex].name.clone(),
-                                            value.to_string(),
-                                        );
-                                        batch_result_data.push(row);
-                                    } else {
-                                        batch_result_data[rowindex].insert(
-                                            result_columns[columnindex].name.clone(),
-                                            value.to_string(),
-                                        );
-                                    }
-                                }
+                        let buf = Vec::new();
+                        let mut writer = arrow::json::ArrayWriter::new(buf);
+                        writer.write_batches(&vec![&batch]).unwrap_or_default();
+                        writer.finish().unwrap_or_default();
+                        let buf = writer.into_inner();
+                        let json_str = String::from_utf8(buf).unwrap();
+                        let json: Vec<serde_json::Value> =
+                            serde_json::from_str(&json_str).unwrap_or_default();
+                        for item in json {
+                            let mut row = HashMap::new();
+                            if let Some(object) = item.as_object() {
+                                object.iter().for_each(|(k, v)| {
+                                    row.insert(k.to_string(), v.to_string());
+                                });
                             }
+                            batch_result_data.push(row);
                         }
+
                         result_data.append(&mut batch_result_data);
                     }
                     Some(Err(e)) => {
