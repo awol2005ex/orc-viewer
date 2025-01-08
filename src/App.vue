@@ -4,7 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { ElLoading, ElMessage } from "element-plus";
 const orcFileForm = reactive({ inputFiles: "" });
-
+const compression_type =ref("");
 /*
 async function read_orc_file(filename:string) {
   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -39,6 +39,8 @@ async function read_orc_file_by_page(
   orc_struct.value = JSON.stringify(result.columns);
 
   total.value = parseInt(result.total);
+
+  compression_type.value= result.compression_type;
 }
 
 async function export_orc_file_csv(
@@ -178,6 +180,8 @@ const handleSizeChange = async (val: number) => {
   </el-form>
 
   <br />
+  <el-divider v-if="compression_type!='' &&  compression_type!='NONE'">Compression Type:{{ compression_type }}</el-divider>
+  <br/>
   <el-table :data="data" min-height="240" border fit>
     <el-table-column label="__rowindex" width="150px">
       <template #default="scope">
