@@ -5,20 +5,6 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { ElLoading, ElMessage } from "element-plus";
 const orcFileForm = reactive({ inputFiles: "" });
 const compression_type =ref("");
-/*
-async function read_orc_file(filename:string) {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  const  result :any =await invoke("read_orc_file", { filename: filename});
-  console.log(result);
-
-
-  columns.value = result.columns;
-  data.value = result.rows;
-
-  orc_struct.value= JSON.stringify(result.columns);
-
-  total.value = result.total;
-}*/
 
 async function read_orc_file_by_page(
   filename: string,
@@ -78,6 +64,10 @@ const openFile = async () => {
       {
         name: "ORC Files",
         extensions: ["orc"],
+      },
+      {
+        name: "Other Files",
+        extensions: ["*"],
       },
     ],
   });

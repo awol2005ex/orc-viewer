@@ -8,7 +8,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            read_orc_file,
             read_orc_file_by_page,
             export_orc_file_csv
         ])
